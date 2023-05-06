@@ -10,6 +10,5 @@
 
 #include <Icosphere.hpp>
 
-void initializeSystem();
 
 #endif /* snakeGame_h */

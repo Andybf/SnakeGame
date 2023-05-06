@@ -1,13 +1,13 @@
 #version 330
 
-in vec3 vertices;
+
 in vec2 texCoords;
+in vec3 vertices;
 
 //Per instance rendering
-in vec2 bodySegmentPosition;
-in vec2 bodySegmentTexCoords;
+// [0][3] & [1][3] = texture coords
+in mat4 bodyInstance;
 
-uniform mat4 modelMatrix;
 uniform mat4 viewMatrix;
 uniform mat4 projectionMatrix;
 
@@ -15,12 +15,7 @@ out vec2 outTexCoords;
 out vec2 outSpriteCoords;
 
 void main(void) {
-    vec3 newPosition = vec3(vertices.x + bodySegmentPosition.x,
-                            vertices.y + bodySegmentPosition.y,
-                            vertices.z);
-    
-    
-    gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(newPosition, 1.0f);
+    gl_Position = projectionMatrix * viewMatrix * bodyInstance * vec4(vertices, 1.0f);
     outTexCoords = texCoords;
-    outSpriteCoords = bodySegmentTexCoords;
+    outSpriteCoords = vec2(0.5f, 0.50);
 }
