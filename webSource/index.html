@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+
+<!--
+
+    Snake Game @ 2023 - Anderson Bucchianico.
+    Game library licensed by General Public License v3
+
+    See https://www.gnu.org/licenses/gpl-3.0.en.html for more details.
+    Thank you.
+
+ -->
+
+<html lang="en" class="dynamic-theme">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0 maximum-scale=1.0, user-scalable=0"
+        >
+        <link rel="stylesheet" href="./style.css"/>
+        <title></title>
+    </head>
+
+    <body>
+        
+        <canvas
+            class="emscripten"
+            id="canvas"
+            oncontextmenu="event.preventDefault()"
+            tabindex=-1
+        >Canvas not Supported</canvas>
+        
+        <div id="console-container">
+            <p id="output"></p>
+            <button
+                class="console-button"
+                onclick="clearConsole(event)"
+            >Clear</button>
+        </div>
+    </body>
+
+    <script src="main.js"></script>
+    <script src="index.js"></script>
+</html>

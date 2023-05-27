@@ -7,112 +7,79 @@
 
 #include "snakeGame.h"
 
-#define TEX_PIXEL_POINT 0.03125 // 1px / 32px
-
-Camera* camera;
-Projection* projection;
-SolidObject* player;
-SolidObject* fruit;
-Entity* background;
-Entity* wall;
-Text* text;
-
-uint startTime = 0;
-ushort updateStep = 0;
-const ushort movementSteps = 24;
-const float updateRate = 1.0f/movementSteps;
-
-std::vector<glm::vec3> playerBodySegTarget;
-std::vector<glm::vec3> playerBodySegBase;
-std::vector<glm::mat4> playerMatrices;
-glm::vec3 playerDirection = glm::vec3(0, 0, 0);
-glm::vec3 newPlayerDirection = glm::vec3(0,0,0);
-glm::vec3 lastPlayerPosition = glm::vec3(0);
-float objectSize = 1;
-bool shouldRunGameLogic = false;
-
-uint points = 2;
-uint pointsToMake = 0;
-
-char title[16] = "SnakeGame";
-unsigned short height = 800;
-unsigned short width = 800;
-
-float yaw = 45.0f;
-float pitch = -89.9f;
-
-void initializeSystem();
-void prepareGameStart();
-void startGameLoop();
-void mainLoop();
-void runGameLogic();
-void render();
-void gameOverLoop();
-float randBetween(float min, float max);
-
-void onKeyDown(int key);
-void onKeyUp(int key);
-
 int main(int argc, const char * argv[]) {
     Loader::File::setExecutableSystemPath( (char*)argv[0] );
-    
+    for (int c=0; c<argc; c++) {
+        
+        if (strstr(argv[c], ARG_WINDOW_WIDTH)) {
+            width = atoi(argv[c] + strlen(ARG_WINDOW_WIDTH));
+        }
+        if (strstr(argv[c], ARG_WINDOW_HEIGHT)) {
+            height = atoi(argv[c] + strlen(ARG_WINDOW_HEIGHT));
+        }
+    }
     initializeSystem();
 }
 
 void initializeSystem() {
     srand((uint)time(NULL));
     
+    Core::Window::enableWindowResizable();
     Core::Window::initialize(width, height, title);
     Core::Window::setLoopCallback(startGameLoop);
-    Core::Render::initialize(Core::Window::getRenderContext());
-    Core::Render::enableTransparency();
+    Core::Renderer::initialize(Core::Window::getRenderContext());
+    Core::Renderer::enableTransparency();
     
-    Input::setKeyUpCallbackFunction(onKeyUp);
     Input::setKeyDownCallbackFunction(onKeyDown);
+    Input::setWindowEventResizeCallbackFunction(onWindowResize);
     
     Loader::Texture::setFilteringMode(GL_NEAREST);
     GLuint gameTexturesId = Loader::Texture::load2d(Loader::Texture::fromFile("snake-game-sprites.png"));
-    
     GLuint programForMultipleDraws = Loader::Shader::fromFile("gameObjectInstanced.vs", "gameObjectInstanced.fs");
     GLuint programForOneDraw = Loader::Shader::fromFile("gameObject.vs", "gameObject.fs");
     
-    player = new SolidObject();
-    player->setPosition(glm::vec3(0.5, 0.5, 0));
-    player->relatedShaderId = programForMultipleDraws;
-    player->relatedTexturesId[0] = gameTexturesId;
-    player->hitbox = HitboxQuad{
-        player->getPosition().x-(objectSize/2), player->getPosition().y-(objectSize/2),
-        objectSize, objectSize
-    };
+    player.entity = new Entity();
+    player.entity->relatedShaderId = programForMultipleDraws;
+    player.entity->relatedTexturesId[0] = gameTexturesId;
+    player.hitbox = Hitbox{player.entity->getPosition().x, player.entity->getPosition().y};
     Mesh* playerModel = new Mesh;
     Creator::Quad::make(playerModel, objectSize, objectSize);
     Creator::Quad::addTexCoords(playerModel, 0.0f, 0.0f, TEX_PIXEL_POINT*8, TEX_PIXEL_POINT*8);
-    playerModel->map["bodyInstance"] = ModelSubdata{
-        .attribDivisor = 1,
-        .dimensions = 4,
-        .locations = 4,
-        .stride = sizeof(glm::mat4),
-    };
+    playerModel->map["bodyInstance"] = ModelSubdata{};
+    playerModel->map["bodyInstance"].attribDivisor = 1;
+    playerModel->map["bodyInstance"].dimensions = 4;
+    playerModel->map["bodyInstance"].locations = 4;
+    playerModel->map["bodyInstance"].stride = sizeof(glm::mat4);
     playerModel->map["bodyInstance"].list.resize(256*16);
-    player->buffer = Loader::Model::fromMesh(playerModel, player->relatedShaderId);
     
-    glm::mat4 headMatrix = glm::mat4(1.0f);
-    headMatrix = glm::translate(headMatrix, glm::vec3(0.5f, 0.5f, 0));
+    playerModel->map["spriteLocations"] = ModelSubdata {};
+    playerModel->map["spriteLocations"].attribDivisor = 1;
+    playerModel->map["spriteLocations"].dimensions = 2;
+    playerModel->map["spriteLocations"].locations = 1;
+    playerModel->map["spriteLocations"].stride = 0;
+    playerModel->map["spriteLocations"].list.resize(256*2);
+    player.entity->buffer = Loader::Model::fromMesh(playerModel,
+                                                    player.entity->relatedShaderId);
     
-    glm::mat4 tailMatrix = glm::mat4(1.0f);
-    tailMatrix = glm::translate(tailMatrix, glm::vec3(0.5f, 1.5f, 0));
-    
-    playerMatrices.insert(playerMatrices.end(), {
-        headMatrix, tailMatrix
+    player.matrices.insert(player.matrices.end(), {
+        (glm::mat4)glm::translate(glm::vec3(11.0f, 11.0f, 0)),
+        (glm::mat4)glm::translate(glm::vec3(11.0f, 12.0f, 0))
     });
-    Loader::Model::updateBufferSubDataMatrix(player->buffer, "bodyInstance", playerMatrices);
+    Loader::Model::updateBufferSubDataMatrix(player.entity->buffer,
+                                             "bodyInstance",
+                                             player.matrices);
+    
+    player.spriteLocations.insert(player.spriteLocations.end(), {
+        spriteMap["snakeHead"].x, spriteMap["snakeHead"].y,
+        spriteMap["snakeTail"].x, spriteMap["snakeTail"].y,
+    });
+    Loader::Model::updateBufferSubData(player.entity->buffer,
+                                       "spriteLocations",
+                                       player.spriteLocations);
 
-    playerBodySegBase.reserve(256*12);
-    playerBodySegBase.push_back(glm::vec3(0.5f, 0.5f, 0));
-    playerBodySegBase.push_back(glm::vec3(0.5f, 1.5f, 0));
-    playerBodySegTarget.reserve(256*12);
-    playerBodySegTarget.push_back(glm::vec3(0.0f, 0.0f, 0));
-    playerBodySegTarget.push_back(glm::vec3(0.5f, 0.5f, 0));
+    player.positionTargetsMat4.reserve(256);
+    player.positionTargetsMat4.push_back(glm::translate(glm::vec3(11.0f, 11.0f, 0)));
+    player.positionTargetsMat4.push_back(glm::translate(glm::vec3(11.0f, 12.0f, 0)));
     
     text = new Text();
     text->relatedTexturesId[0] = Loader::Texture::load2d(Loader::Texture::fromFile("fontmap.png"));
@@ -122,41 +89,80 @@ void initializeSystem() {
     text->createModel();
     
     background = new Entity();
-    background->setPosition(glm::vec3(-10.5,-10.5, 0));
+    background->setPosition(glm::vec3(-1, -1, 0));
     background->relatedTexturesId[0] = gameTexturesId;
     background->relatedShaderId = programForOneDraw;
     Mesh* bkgModel = new Mesh;
-    float size = 21;
+    float size = 23;
     Creator::Grid::addVertices2d(bkgModel, size, size);
-    Creator::Grid::addTexCoords(bkgModel, 0.0f, 0.25f, 0.25f, 0.25f);
+    Creator::Grid::addTexCoords(bkgModel,
+                                spriteMap["background"].x, spriteMap["background"].y,
+                                0.25f, 0.25f);
     Creator::Grid::addCounterClockwiseIndices(bkgModel, size, size);
     background->buffer = Loader::Model::fromMesh(bkgModel, background->relatedShaderId);
     
-    fruit = new SolidObject();
-    fruit->setPosition(glm::vec3(-5.5,-5.5,0));
-    fruit->hitbox = HitboxQuad{0, 0, 0, 0};
-    fruit->relatedTexturesId[0] = gameTexturesId;
-    fruit->relatedShaderId = programForOneDraw;
-    fruit->hitbox = HitboxQuad{
-        fruit->getPosition().x-(objectSize/2), fruit->getPosition().y-(-objectSize/2),
-        objectSize, objectSize
-    };
+    fruit.entity = new Entity();
+    fruit.entity->setPosition(glm::vec3(11.0, 3.0,0));
+    fruit.hitbox = Hitbox{0, 0};
+    fruit.entity->relatedTexturesId[0] = gameTexturesId;
+    fruit.entity->relatedShaderId = programForOneDraw;
+    fruit.hitbox = Hitbox{fruit.entity->getPosition().x, fruit.entity->getPosition().y};
     Mesh* fruitModel = new Mesh;
     Creator::Quad::make(fruitModel, 1, 1);
-    Creator::Quad::addTexCoords(fruitModel, 0.0f, 0.75f, 0.25f, 0.25f);
-    fruit->buffer = Loader::Model::fromMesh(fruitModel, fruit->relatedShaderId);
+    Creator::Quad::addTexCoords(fruitModel,
+                                spriteMap["fruit"].x, spriteMap["fruit"].y,
+                                0.25f, 0.25f);
+    fruit.entity->buffer = Loader::Model::fromMesh(fruitModel, fruit.entity->relatedShaderId);
     
-    wall = new Entity();
-    wall->setPosition(glm::vec3(-9,9,0));
-    wall->relatedTexturesId[0] = gameTexturesId;
-    wall->relatedShaderId = programForOneDraw;
+    barrier.north = new Entity();
+    barrier.north->setPosition(glm::vec3(10.5, 21.0,0));
+    barrier.north->relatedTexturesId[0] = gameTexturesId;
+    barrier.north->relatedShaderId = programForOneDraw;
     Mesh* wallModel = new Mesh;
-    Creator::Quad::make(wallModel, 18, 1);
-    Creator::Quad::addTexCoords(wallModel, 0.25f, 0.50f, 0.25f, 0.25f);
-    wall->buffer = Loader::Model::fromMesh(wallModel, wall->relatedShaderId);
+    Creator::Quad::make(wallModel, 20, 1);
+    Creator::Quad::addTexCoords(wallModel,
+                                spriteMap["wall"].x, spriteMap["wall"].y,
+                                0.25f, 0.25f);
+    barrier.north->buffer = Loader::Model::fromMesh(wallModel, barrier.north->relatedShaderId);
+    
+    barrier.northEast = new Entity();
+    barrier.northEast->setPosition(glm::vec3(21.0, 21.0, 0));
+    barrier.northEast->setOrientation(-90, glm::vec3(0,0,1));
+    barrier.northEast->relatedTexturesId[0] = gameTexturesId;
+    barrier.northEast->relatedShaderId = programForOneDraw;
+    Mesh* wallCorner = new Mesh;
+    Creator::Quad::make(wallCorner, 1.0f, 1.0f);
+    Creator::Quad::addTexCoords(wallCorner,
+                                spriteMap["wallCorner"].x, spriteMap["wallCorner"].y,
+                                0.25f, 0.25f);
+    barrier.northEast->buffer = Loader::Model::fromMesh(wallCorner, barrier.northEast->relatedShaderId);
+    
+    barrier.east = barrier.north->clone();
+    barrier.east->setPosition(glm::vec3(21.0, 10.5, 0));
+    barrier.east->setOrientation(-90, glm::vec3(0, 0, 1));
+    
+    barrier.southEast = barrier.northEast->clone();
+    barrier.southEast->setPosition(glm::vec3(21.0, 0, 0));
+    barrier.southEast->setOrientation(180, glm::vec3(0,0,1));
+    
+    barrier.south = barrier.north->clone();
+    barrier.south->setPosition(glm::vec3(10.5, 0, 0));
+    barrier.south->setOrientation(180, glm::vec3(0,0,1));
+    
+    barrier.southWest = barrier.northEast->clone();
+    barrier.southWest->setPosition(glm::vec3(0, 0, 0));
+    barrier.southWest->setOrientation(90, glm::vec3(0,0,1));
+    
+    barrier.west = barrier.north->clone();
+    barrier.west->setPosition(glm::vec3(0, 10.5, 0));
+    barrier.west->setOrientation(90, glm::vec3(0,0,1));
+    
+    barrier.northWest = barrier.northEast->clone();
+    barrier.northWest->setPosition(glm::vec3(0, 21, 0));
+    barrier.northWest->setOrientation(0, glm::vec3(0,0,1));
     
     camera = new Camera();
-    camera->setPosition(glm::vec3(0,0,10));
+    camera->setPosition(glm::vec3(10.5, 10.5,11));
     
     projection = new Projection();
     projection->setPerspecProjection(90, Core::Window::getAspectRatio(), 0.1f, 100.0f);
@@ -164,26 +170,30 @@ void initializeSystem() {
     
     prepareGameStart();
     
-    Core::Render::enableFaceCulling();
+    Core::Renderer::enableFaceCulling();
     Core::Window::startLoop();
 }
 
 void prepareGameStart() {
-    newPlayerDirection = glm::vec3(0, -updateRate, 0);
-    playerDirection = newPlayerDirection;
+    player.newDirection = glm::vec3(0, -updateRate, 0);
+    player.direction = player.newDirection;
     startTime = Core::Window::getTimeElapsed();
+    
+    fillMap.resize(400);
+    int c=0;
+    for (int x=1; x<=20; x++) {
+        for (int y=1; y<=20; y++) {
+            fillMap[c] = glm::vec2(x,y);
+            c++;
+        }
+    }
 }
 
 void startGameLoop() {
-    if (Core::Window::getTimeElapsed() - startTime > 1500) {
-        text->setPosition(glm::vec3(10, 13.0f ,1.0f));
-        text->setScale(glm::vec3(16.0f));
-        Core::Window::setLoopCallback(mainLoop);
-    }
     Core::Shader::setActiveProgram(background->relatedShaderId);
     Core::Shader::setUniformTexture(background->relatedTexturesId[0], background->textureType, 0);
     Core::Shader::setUniformModelViewProjection(background, camera->getMatrix(), projection->getPerspective());
-    Core::Render::drawElements(background);
+    Core::Renderer::drawElements(background);
     
     Core::Shader::setActiveProgram(text->relatedShaderId);
     sprintf(text->content, "Ready");
@@ -191,126 +201,243 @@ void startGameLoop() {
     Loader::Model::updateBufferSubData(text->buffer, "charInfo", text->getStringInfo());
     Core::Shader::setUniformTexture(text->relatedTexturesId[0], text->textureType, 0);
     Core::Shader::setUniformModelProjection(text, projection->getOrthographic());
-    Core::Render::drawElementsInstanced(text, text->getStringSize());
+    Core::Renderer::drawElementsInstanced(text, text->getStringSize());
+    
+    if (Core::Window::getTimeElapsed() - startTime > 2000) {
+        text->setPosition(glm::vec3((width/2)-128, 18 , 1));
+        text->setScale(glm::vec3(16.0f));
+        Core::Window::setLoopCallback(mainLoop);
+    }
 }
  
 void mainLoop() {
     runGameLogic();
-    Core::Shader::setActiveProgram(background->relatedShaderId);
-    Core::Shader::setUniformTexture(background->relatedTexturesId[0], background->textureType, 0);
-    Core::Shader::setUniformModelViewProjection(background, camera->getMatrix(), projection->getPerspective());
-    Core::Render::drawElements(background);
-    
-    Core::Shader::setActiveProgram(wall->relatedShaderId);
-    Core::Shader::setUniformTexture(wall->relatedTexturesId[0], wall->textureType, 0);
-    Core::Shader::setUniformModelViewProjection(wall, camera->getMatrix(), projection->getPerspective());
-    Core::Render::drawElements(wall);
-    
-    Core::Shader::setActiveProgram(fruit->relatedShaderId);
-    Core::Shader::setUniformTexture(fruit->relatedTexturesId[0], fruit->textureType, 0);
-    Core::Shader::setUniformModelViewProjection(fruit, camera->getMatrix(), projection->getPerspective());
-    Core::Render::drawElements(fruit);
-    
-    Core::Shader::setActiveProgram(player->relatedShaderId);
-    Core::Shader::setUniformTexture(player->relatedTexturesId[0], player->textureType, 0);
-    Core::Shader::setUniformMatrix("viewMatrix", camera->getMatrix());
-    Core::Shader::setUniformMatrix("projectionMatrix", projection->getPerspective());
-    Core::Render::drawElementsInstanced(player, points);
+    renderGameScenery();
     
     Core::Shader::setActiveProgram(text->relatedShaderId);
     sprintf(text->content,
-            "SnakeGame Information\n"
-            "Points: %d\n"
-            "Time Elapsed: %d\n"
-            "Update: % 0.2f\n"
-            "base:   % 0.2f % 0.2f % 0.2f\n"
-            "target: % 0.2f % 0.2f % 0.2f\n",
-            points,
-            Core::Window::getTimeElapsed()/1000,
-            updateRate*updateStep,
-            playerBodySegBase[1].x, playerBodySegBase[1].y, playerBodySegBase[1].z,
-            playerBodySegTarget[1].x, playerBodySegTarget[1].y, playerBodySegTarget[1].z
+            "Points% d  |  Time Elapsed %d\n"
+            "Hitbox: x: % 0.2f | y: % 0.2f",
+            points, Core::Window::getTimeElapsed()/1000,
+            player.hitbox.x, player.hitbox.y
     );
     text->processContents((uchar*) text->content);
     Loader::Model::updateBufferSubData(text->buffer, "charInfo", text->getStringInfo());
     Core::Shader::setUniformTexture(text->relatedTexturesId[0], text->textureType, 0);
     Core::Shader::setUniformModelProjection(text, projection->getOrthographic());
-    Core::Render::drawElementsInstanced(text, text->getStringSize());
+    Core::Renderer::drawElementsInstanced(text, text->getStringSize());
+}
+
+void prepareForGameOver() {
+    player.spriteLocations[0] = spriteMap["snakeTongue"].x;
+    player.spriteLocations[0+1] = spriteMap["snakeTongue"].y;
+    player.newDirection = glm::vec4(0,0,1, 0);
+    player.direction = player.newDirection;
+    player.isControlEnabled = false;
+    finishTime = Core::Window::getTimeElapsed()/1000;
+    
+    text->setPosition(glm::vec3((width/2)-75, (height/2) ,1.0f));
+    text->setScale(glm::vec3(20.0f));
+    
+    Core::Window::setLoopCallback(gameOverLoop);
+}
+
+void gameOverLoop() {
+    renderGameScenery();
+    
+    Core::Shader::setActiveProgram(text->relatedShaderId);
+    sprintf(text->content,
+            " Game Over\n"
+            " Points: %d\n"
+            " Time: %d ",
+            points, finishTime
+    );
+    text->processContents((uchar*) text->content);
+    Loader::Model::updateBufferSubData(text->buffer, "charInfo", text->getStringInfo());
+    Core::Shader::setUniformTexture(text->relatedTexturesId[0], text->textureType, 0);
+    Core::Shader::setUniformModelProjection(text, projection->getOrthographic());
+    Core::Renderer::drawElementsInstanced(text, text->getStringSize());
 }
 
 void runGameLogic() {
     updateStep++;
+    
+    // Snake in action
     if (updateStep <= movementSteps) {
-        for (int c=1; c<playerMatrices.size(); c++) {
-            if (playerBodySegBase[c] == playerBodySegBase[c-1]) {
+        for (int c=1; c<player.matrices.size(); c++) {
+            if (player.positionTargetsMat4[c] == player.positionTargetsMat4[c-1]) {
+                if (c < player.matrices.size()-1) {
+                    player.spriteLocations[c*2] = spriteMap["snakeFruit"].x;
+                    player.spriteLocations[c*2+1] = spriteMap["snakeFruit"].y;
+                }
                 continue;
             }
             float weight = updateRate*updateStep;
-            glm::vec3 result = Util::Color::mix(playerBodySegBase[c], playerBodySegTarget[c], weight);
-            playerMatrices[c] = glm::translate(result);
+            glm::vec3 nextPositionStep = Util::Math::mix(player.positionTargetsMat4[c][3],
+                                                         player.positionTargetsMat4[c-1][3],
+                                                         weight);
+            player.matrices[c] = player.positionTargetsMat4[c-1];
+            player.matrices[c][3].x = nextPositionStep.x;
+            player.matrices[c][3].y = nextPositionStep.y;
+            if (c < player.matrices.size()-1) {
+                player.spriteLocations[c*2] = spriteMap["snakeBody"].x;
+                player.spriteLocations[c*2+1] = spriteMap["snakeBody"].y;
+            }
         }
-        playerMatrices[0] = glm::translate(playerMatrices[0], playerDirection);
-        player->hitbox.x = playerMatrices[0][3].x-(objectSize/2);
-        player->hitbox.y = playerMatrices[0][3].y+(objectSize/2);
-        Loader::Model::updateBufferSubDataMatrix(player->buffer, "bodyInstance", playerMatrices);
+        player.hitbox.x = round(player.matrices[0][3].x);
+        player.hitbox.y = round(player.matrices[0][3].y);
+        player.matrices[0] = glm::translate(glm::vec3(player.matrices[0][3]) + player.direction) *
+                             glm::rotate(glm::radians(player.orientation.w), glm::vec3(player.orientation));
+        Loader::Model::updateBufferSubDataMatrix(player.entity->buffer, "bodyInstance", player.matrices);
+        
+        // Colision on walls
+        if (player.hitbox.x > 20 || player.hitbox.x < 1 ||
+            player.hitbox.y > 20 || player.hitbox.y < 1)
+        {
+            prepareForGameOver();
+        }
     }
     
-    if (updateStep >= movementSteps*2) {
+    // Snake "Sleep Mode"
+    else if (updateStep < movementSteps*2) {
+        
+    }
+    
+    // Prepare for next movement
+    else {
         updateStep = 0;
         points += pointsToMake;
-        playerDirection = newPlayerDirection;
+        player.direction = player.newDirection;
         
-        playerBodySegBase[0] = playerMatrices[0][3];
-        for (int c=1; c<playerMatrices.size(); c++) {
-            playerBodySegBase[c] = playerMatrices[c][3];
-            playerBodySegTarget[c] = playerMatrices[c-1][3];
+        for (int c=0; c<player.matrices.size(); c++) {
+            player.positionTargetsMat4[c] = player.matrices[c];
         }
         
         if (pointsToMake == 1) {
-            glm::mat4 newSegment = playerMatrices.back();
-            playerMatrices.push_back(newSegment);
-            playerBodySegBase.push_back(playerBodySegBase.back());
-            playerBodySegTarget.push_back(playerBodySegTarget.back());
+            glm::mat4 newSegment = player.matrices.front();
+            player.matrices.insert(player.matrices.begin(), {newSegment});
+            player.positionTargetsMat4.insert(player.positionTargetsMat4.begin(), {
+                player.positionTargetsMat4.front()
+            });
+            player.spriteLocations.push_back(spriteMap["snakeTail"].x);
+            player.spriteLocations.push_back(spriteMap["snakeTail"].y);
         }
         pointsToMake = 0;
         
-        if (Physics::Colision::calc(player->hitbox, fruit->hitbox)) {
-            int newX = Util::Rand::intBetween(-9,9);
-            int newY = Util::Rand::intBetween(-9,9);
-            fruit->setPosition(glm::vec3(newX+(objectSize/2), newY+(objectSize/2), 0));
-            fruit->hitbox.x = fruit->getPosition().x-(objectSize/2);
-            fruit->hitbox.y = fruit->getPosition().y+(objectSize/2);
+        if ((player.hitbox.x == fruit.hitbox.x) && (player.hitbox.y == fruit.hitbox.y)) {
+            int e=0;
+            fillMap.resize(400);
+            for (int y=1; y<=20; y++) {
+                for (int x=1; x<=20; x++) {
+                    fillMap[e] = glm::vec2(x,y);
+                    e++;
+                }
+            }
+            for (int d=0; d<player.matrices.size(); d++) {
+                glm::vec2 segPos = glm::vec2(round(player.matrices[d][3].x), round(player.matrices[d][3].y));
+                for (int c=0; c<fillMap.size(); c++) {
+                    if (fillMap[c] == segPos) {
+                        fillMap.erase(fillMap.begin() + c);
+                    }
+                }
+            }
+            int availablePosition = Util::Rand::intBetween(1, (int)fillMap.size());
+            fruit.entity->setPosition(glm::vec3(fillMap[availablePosition].x,
+                                                fillMap[availablePosition].y,
+                                                0));
+            fruit.hitbox.x = fruit.entity->getPosition().x;
+            fruit.hitbox.y = fruit.entity->getPosition().y;
             pointsToMake = 1;
+        }
+        
+        for (uint c=2; c<player.matrices.size(); c++) {
+            float segmentColisionPointX = round(player.matrices[c][3].x);
+            float segmentColisionPointY = round(player.matrices[c][3].y);
+            if ((player.hitbox.x == segmentColisionPointX) &&
+                (player.hitbox.y == segmentColisionPointY))
+            {
+                prepareForGameOver();
+            }
+        }
+    }
+    
+    Loader::Model::updateBufferSubData(player.entity->buffer, "spriteLocations", player.spriteLocations);
+}
+
+void renderGameScenery() {
+    Core::Shader::setActiveProgram(background->relatedShaderId);
+    Core::Shader::setUniformTexture(background->relatedTexturesId[0], background->textureType, 0);
+    Core::Shader::setUniformModelViewProjection(background, camera->getMatrix(), projection->getPerspective());
+    Core::Renderer::drawElements(background);
+    
+    Core::Shader::setActiveProgram(barrier.north->relatedShaderId);
+    Core::Shader::setUniformTexture(barrier.north->relatedTexturesId[0], barrier.north->textureType, 0);
+    Core::Shader::setUniformMatrix("viewMatrix", camera->getMatrix());
+    Core::Shader::setUniformMatrix("projectionMatrix", projection->getPerspective());
+    Core::Shader::setUniformMatrix("modelMatrix", barrier.north->getMatrix());
+    Core::Renderer::drawElements(barrier.north);
+    Core::Shader::setUniformMatrix("modelMatrix", barrier.northEast->getMatrix());
+    Core::Renderer::drawElements(barrier.northEast);
+    Core::Shader::setUniformMatrix("modelMatrix", barrier.east->getMatrix());
+    Core::Renderer::drawElements(barrier.east);
+    Core::Shader::setUniformMatrix("modelMatrix", barrier.southEast->getMatrix());
+    Core::Renderer::drawElements(barrier.southEast);
+    Core::Shader::setUniformMatrix("modelMatrix", barrier.south->getMatrix());
+    Core::Renderer::drawElements(barrier.south);
+    Core::Shader::setUniformMatrix("modelMatrix", barrier.southWest->getMatrix());
+    Core::Renderer::drawElements(barrier.southWest);
+    Core::Shader::setUniformMatrix("modelMatrix", barrier.west->getMatrix());
+    Core::Renderer::drawElements(barrier.west);
+    Core::Shader::setUniformMatrix("modelMatrix", barrier.northWest->getMatrix());
+    Core::Renderer::drawElements(barrier.northWest);
+    
+    Core::Shader::setActiveProgram(fruit.entity->relatedShaderId);
+    Core::Shader::setUniformTexture(fruit.entity->relatedTexturesId[0], fruit.entity->textureType, 0);
+    Core::Shader::setUniformModelViewProjection(fruit.entity, camera->getMatrix(), projection->getPerspective());
+    Core::Renderer::drawElements(fruit.entity);
+    
+    Core::Shader::setActiveProgram(player.entity->relatedShaderId);
+    Core::Shader::setUniformTexture(player.entity->relatedTexturesId[0], player.entity->textureType, 0);
+    Core::Shader::setUniformMatrix("viewMatrix", camera->getMatrix());
+    Core::Shader::setUniformMatrix("projectionMatrix", projection->getPerspective());
+    Core::Renderer::drawElementsInstanced(player.entity, points);
+}
+
+void onKeyDown(int key) {
+    if (player.isControlEnabled) {
+        switch (key) {
+            case IC_INPUT_ARROW_RIGHT:
+                if (player.direction != direction.left) {
+                    player.newDirection = direction.right;
+                    player.orientation = glm::vec4(0,0,1, 90);
+                }
+                break;
+            case IC_INPUT_ARROW_LEFT:
+                if (player.direction != direction.right) {
+                    player.newDirection = glm::vec3(-updateRate, 0, 0);
+                    player.orientation = glm::vec4(0,0,1, -90);
+                }
+                break;
+            case IC_INPUT_ARROW_DOWN:
+                if (player.direction != direction.up) {
+                    player.newDirection = direction.down;
+                    player.orientation = glm::vec4(0,0,1, 360);
+                }
+                break;
+            case IC_INPUT_ARROW_UP:
+                if (player.direction != direction.down) {
+                    player.newDirection = direction.up;
+                    player.orientation = glm::vec4(0,0,1, 180);
+                }
+                break;
+            default:
+                break;
         }
     }
 }
 
-void render() {
-}
-
-void onKeyDown(int key) {
-    switch (key) {
-        case IC_INPUT_ARROW_RIGHT:
-            newPlayerDirection = glm::vec3(+updateRate, 0, 0);
-            player->setOrientation(90, glm::vec3(0,0,1));
-            break;
-        case IC_INPUT_ARROW_LEFT:
-            newPlayerDirection = glm::vec3(-updateRate, 0, 0);
-            player->setOrientation(-90, glm::vec3(0,0,1));
-            break;
-        case IC_INPUT_ARROW_DOWN:
-            newPlayerDirection = glm::vec3(0, -updateRate, 0);
-            player->setOrientation(0, glm::vec3(0,0,1));
-            break;
-        case IC_INPUT_ARROW_UP:
-            newPlayerDirection = glm::vec3(0, updateRate, 0);
-            player->setOrientation(180, glm::vec3(0,0,1));
-            break;
-        default:
-            break;
-    }
-}
-
-void onKeyUp(int key) {
-    
+void onWindowResize(int newWidth, int newHeight) {
+    glViewport(0, 0, newWidth, newWidth);
+    projection->setPerspecProjection(90, (float) 1, 0.1f, 100.0f);
+    projection->setOrthographic(0.0f, (float)newWidth, (float)newHeight, 0.0f);
 }
