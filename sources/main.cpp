@@ -67,8 +67,12 @@ void initializeSystem() {
     gameInterface->createModel();
     
     centerText = gameInterface->clone();
-    centerText->setPosition(glm::vec3(5.10, 11, 0));
+    centerText->setPosition(glm::vec3(5.10, 12.25, 0));
     centerText->setScale(glm::vec3(0.60f));
+    
+    creditsText = gameInterface->clone();
+    creditsText->setPosition(glm::vec3(5, 0.5, 0));
+    creditsText->setScale(glm::vec3(0.58f));
     
     background = new Entity();
     background->setPosition(glm::vec3(-1, -1, 0));
@@ -105,9 +109,7 @@ void initializeSystem() {
     barrier.northEast->relatedShaderId = programForOneDraw;
     Mesh* wallCorner = new Mesh;
     Creator::Quad::make(wallCorner, 1.0f, 1.0f);
-    Creator::Quad::addTexCoords(wallCorner,
-                                spriteMap["wallCorner"].x, spriteMap["wallCorner"].y,
-                                0.25f, 0.25f);
+    Creator::Quad::addTexCoords(wallCorner, spriteMap["wallCorner"].x, spriteMap["wallCorner"].y, 0.25f, 0.25f);
     barrier.northEast->buffer = Loader::Model::fromMesh(wallCorner, barrier.northEast->relatedShaderId);
     
     barrier.east = barrier.north->clone();
@@ -141,10 +143,32 @@ void initializeSystem() {
     projection->setPerspecProjection(90, Core::Window::getAspectRatio(), 0.1f, 100.0f);
     projection->setOrthographic(0, windowWidth, windowHeight, 0);
     
-    prepareGameStart();
-    
+    Core::Window::setLoopCallback(titleScreenLoop);
     Core::Renderer::enableFaceCulling();
     Core::Window::startLoop();
+}
+
+void titleScreenLoop() {
+    drawBackground();
+    Core::Shader::setActiveProgram(centerText->relatedShaderId);
+    sprintf(centerText->content,
+            "                        \n"
+            "        SnakeGame       \n"
+            "                        \n"
+            "   tap/press to start   \n"
+            "                        \n"
+    );
+    centerText->processContents((uchar*) centerText->content);
+    Loader::Model::updateBufferSubData(centerText->buffer, "charInfo", centerText->getStringInfo());
+    Core::Shader::setUniformTexture(centerText->relatedTexturesId[0], centerText->textureType, 0);
+    Core::Shader::setUniformModelViewProjection(centerText, camera->getMatrix(), projection->getPerspective());
+    Core::Renderer::drawElementsInstanced(centerText, centerText->getStringSize());
+    
+    sprintf(creditsText->content, "2023 - Anderson Bucchianico");
+    creditsText->processContents((uchar*) creditsText->content);
+    Loader::Model::updateBufferSubData(creditsText->buffer, "charInfo", creditsText->getStringInfo());
+    Core::Shader::setUniformModelViewProjection(creditsText, camera->getMatrix(), projection->getPerspective());
+    Core::Renderer::drawElementsInstanced(creditsText, creditsText->getStringSize());
 }
 
 void prepareGameStart() {
@@ -165,14 +189,17 @@ void prepareGameStart() {
     player.positionTargetsMat4.push_back(glm::translate(glm::vec3(11.0f, 12.0f, 0)));
     player.entity->isEnabled = true;
     player.newDirection = glm::vec3(0, -updateRate, 0);
+    player.orientation = glm::vec4(0,0,1, 0);
     player.direction = player.newDirection;
     
     fruit.entity->setPosition(glm::vec3(11.0, 8.0, 0));
     fruit.hitbox = Hitbox{fruit.entity->getPosition().x, fruit.entity->getPosition().y};
     
+    centerText->setPosition(glm::vec3(5.10, 11, 0));
+    
     points = 0;
     updateStep = 0;
-    isGameOver = false;
+    isGameplayInterrupted = false;
     finishTime = 0;
     startTime = Core::Window::getTimeElapsed();
     
@@ -180,11 +207,9 @@ void prepareGameStart() {
 }
 
 void startGameLoop() {
-    
     drawBackground();
     drawBarriers();
     drawGameInterface();
-    
     Core::Shader::setActiveProgram(centerText->relatedShaderId);
     sprintf(centerText->content,
             "                        \n"
@@ -240,20 +265,13 @@ void runGameLogic() {
         Loader::Model::updateBufferSubDataMatrix(player.entity->buffer, "bodyInstance", player.matrices);
         
         // Colision on walls
-        if (player.hitbox.x > 20 || player.hitbox.x < 1 ||
-            player.hitbox.y > 20 || player.hitbox.y < 1)
-        {
+        if (player.hitbox.x > 20 || player.hitbox.x < 1 || player.hitbox.y > 20 || player.hitbox.y < 1) {
             prepareForGameOver();
         }
     }
     
     // Snake "Sleep Mode"
-    else if (updateStep < movementSteps*2) {
-        
-    }
-    
-    // Prepare for next movement
-    else {
+    else if (updateStep > movementSteps*2) {
         updateStep = 0;
         points += pointsToMake;
         player.direction = player.newDirection;
@@ -265,6 +283,7 @@ void runGameLogic() {
         if (pointsToMake == 1) {
             glm::mat4 newSegment = player.matrices.front();
             player.matrices.insert(player.matrices.begin(), {newSegment});
+            Loader::Model::updateBufferSubDataMatrix(player.entity->buffer, "bodyInstance", player.matrices);
             player.positionTargetsMat4.insert(player.positionTargetsMat4.begin(), {
                 player.positionTargetsMat4.front()
             });
@@ -272,6 +291,15 @@ void runGameLogic() {
             player.spriteLocations.push_back(spriteMap["snakeTail"].y);
         }
         pointsToMake = 0;
+        
+        float distance = sqrt(pow(fruit.hitbox.x-player.hitbox.x, 2) + pow(fruit.hitbox.y-player.hitbox.y, 2));
+        if (distance <= 2) {
+            player.spriteLocations[0] = spriteMap["snakeTongue"].x;
+            player.spriteLocations[1] = spriteMap["snakeTongue"].y;
+        } else {
+            player.spriteLocations[0] = spriteMap["snakeHead"].x;
+            player.spriteLocations[1] = spriteMap["snakeHead"].y;
+        }
         
         if ((player.hitbox.x == fruit.hitbox.x) && (player.hitbox.y == fruit.hitbox.y)) {
             int e=0;
@@ -302,20 +330,25 @@ void runGameLogic() {
         for (uint c=2; c<player.matrices.size(); c++) {
             float segmentColisionPointX = round(player.matrices[c][3].x);
             float segmentColisionPointY = round(player.matrices[c][3].y);
-            if ((player.hitbox.x == segmentColisionPointX) &&
-                (player.hitbox.y == segmentColisionPointY))
-            {
+            if ((player.hitbox.x == segmentColisionPointX) && (player.hitbox.y == segmentColisionPointY)) {
                 prepareForGameOver();
             }
         }
         finishTime = (Core::Window::getTimeElapsed() - startTime)/1000;
+        
+        if (fruit.enabledSprite == 1) {
+            Loader::Model::updateBufferSubData(fruit.entity->buffer, "texCoords", fruit.sprite2);
+            fruit.enabledSprite = 2;
+        } else {
+            Loader::Model::updateBufferSubData(fruit.entity->buffer, "texCoords", fruit.sprite1);
+            fruit.enabledSprite = 1;
+        }
     }
     
     Loader::Model::updateBufferSubData(player.entity->buffer, "spriteLocations", player.spriteLocations);
 }
 
 void renderGameScenery() {
-    
     drawBackground();
     drawBarriers();
     
@@ -369,26 +402,30 @@ void drawGameInterface() {
     gameInterface->processContents((uchar*) gameInterface->content);
     Loader::Model::updateBufferSubData(gameInterface->buffer, "charInfo", gameInterface->getStringInfo());
     Core::Shader::setUniformTexture(gameInterface->relatedTexturesId[0], gameInterface->textureType, 0);
-    gameInterface->setPosition(glm::vec3(0, 21.90,0));
+    gameInterface->setPosition(glm::vec3(0, 21.90, 0));
     Core::Shader::setUniformModelViewProjection(gameInterface, camera->getMatrix(), projection->getPerspective());
     Core::Renderer::drawElementsInstanced(gameInterface, gameInterface->getStringSize());
     
     sprintf(gameInterface->content, " Time Elapsed %04d ", finishTime);
     gameInterface->processContents((uchar*) gameInterface->content);
     Loader::Model::updateBufferSubData(gameInterface->buffer, "charInfo", gameInterface->getStringInfo());
-    gameInterface->setPosition(glm::vec3(13, 21.90,0));
+    gameInterface->setPosition(glm::vec3(13.10, 21.90, 0));
     Core::Shader::setUniformModelViewProjection(gameInterface, camera->getMatrix(), projection->getPerspective());
     Core::Renderer::drawElementsInstanced(gameInterface, gameInterface->getStringSize());
 }
 
 void prepareForGameOver() {
-    player.spriteLocations[0] = spriteMap["snakeTongue"].x;
-    player.spriteLocations[0+1] = spriteMap["snakeTongue"].y;
+    player.spriteLocations[0] = spriteMap["snakeDead"].x;
+    player.spriteLocations[0+1] = spriteMap["snakeDead"].y;
     player.newDirection = glm::vec4(0,0,1, 0);
     player.direction = player.newDirection;
     player.entity->isEnabled = false;
+    isGameplayInterrupted = true;
     finishTime = (Core::Window::getTimeElapsed() - startTime)/1000;
-    isGameOver = true;
+    if (points > record) {
+        record = points;
+    }
+    centerText->setPosition(glm::vec3(5.10, 12.5, 0));
     Core::Window::setLoopCallback(gameOverLoop);
 }
 
@@ -396,9 +433,14 @@ void gameOverLoop() {
     renderGameScenery();
     Core::Shader::setActiveProgram(centerText->relatedShaderId);
     sprintf(centerText->content,
-            "        Game Over       \n"
             "                        \n"
-            " Tap or Click to restart ");
+            "        Game Over       \n"
+            "       Record: %03d      \n"
+            "                        \n"
+            " Tap or press to restart\n"
+            "                        \n",
+            record
+    );
     centerText->processContents((uchar*) centerText->content);
     Loader::Model::updateBufferSubData(centerText->buffer, "charInfo", centerText->getStringInfo());
     Core::Shader::setUniformTexture(centerText->relatedTexturesId[0], centerText->textureType, 0);
@@ -436,7 +478,8 @@ void onKeyDown(int key) {
             default:
                 break;
         }
-    } else if (isGameOver) {
+    }
+    if (isGameplayInterrupted) {
         prepareGameStart();
     }
 }
