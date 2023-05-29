@@ -18,7 +18,8 @@
 Camera* camera;
 Projection* projection;
 Entity* background;
-Text* text;
+Text* gameInterface;
+Text* centerText;
 
 uint startTime = 0;
 uint finishTime = 0;
@@ -27,18 +28,14 @@ const ushort movementSteps = 12;
 const float updateRate = 1.0f/movementSteps;
 
 float objectSize = 1;
-float hitboxDivisor = 2.50f;
+bool isGameOver = false;
 
-uint points = 2;
+uint points = 0;
 uint pointsToMake = 0;
 std::vector<glm::vec2> fillMap;
 
-char title[16] = "SnakeGame";
-unsigned short height = 600;
-unsigned short width = 600;
-
-float yaw = 45.0f;
-float pitch = -89.9f;
+ushort windowHeight = 630;
+ushort windowWidth = 600;
 
 struct Hitbox {
     float x;
@@ -54,7 +51,6 @@ struct Player {
     glm::vec4 orientation = glm::vec4(0,0,1, 0);
     glm::vec3 direction = glm::vec3(0, 0, 0);
     glm::vec3 newDirection = glm::vec3(0,0,0);
-    bool isControlEnabled = true;
 } player;
 
 struct Fruit {
@@ -98,7 +94,13 @@ void prepareGameStart();
 void startGameLoop();
 void mainLoop();
 void runGameLogic();
+
 void renderGameScenery();
+void drawBarriers();
+void drawBackground();
+void drawGameInterface();
+
+void prepareForGameOver();
 void gameOverLoop();
 float randBetween(float min, float max);
 
