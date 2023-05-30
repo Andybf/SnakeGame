@@ -15,79 +15,55 @@
 
 #define TEX_PIXEL_POINT 0.03125 // 1px / 32px
 
-Camera* camera;
-Projection* projection;
-Entity* background;
-Text* gameInterface;
-Text* centerText;
-Text* creditsText;
+extern Camera* camera;
+extern Projection* projection;
+extern Entity* background;
+extern Text* gameInterface;
+extern Text* centerText;
+extern Text* creditsText;
 
-uint startTime = 0;
-uint finishTime = 0;
-ushort updateStep = 0;
-const ushort movementSteps = 12;
-const float updateRate = 1.0f/movementSteps;
-
-float objectSize = 1;
-bool isGameplayInterrupted = true;
-
-uint points = 0;
-uint pointsToMake = 0;
-uint record = 0;
-std::vector<glm::vec2> fillMap;
-
-ushort windowHeight = 630;
-ushort windowWidth = 600;
-
-std::map<std::string, glm::vec2> spriteMap {
-    {"background", glm::vec2(0.00f, 0.25f)},
-    {"wallCorner", glm::vec2(0.00f, 0.50f)},
-    {"wall",       glm::vec2(0.25f, 0.50f)},
-    {"fruit",      glm::vec2(0.00f, 0.75f)},
-    {"fruitShine", glm::vec2(0.25f, 0.75f)},
-    {"snakeBody",  glm::vec2(0.50f, 0.25f)},
-    {"snakeHead",  glm::vec2(0.50f, 0.50f)},
-    {"snakeTongue",glm::vec2(0.75f, 0.50f)},
-    {"snakeDead",  glm::vec2(0.75f, 0.75f)},
-    {"snakeTail",  glm::vec2(0.75f, 0.00f)},
-    {"snakeFruit", glm::vec2(0.75f, 0.25f)},
-};
+extern std::map<std::string, glm::vec2> spriteMap;
 
 struct Hitbox {
     float x;
     float y;
 };
 
-struct Player {
+extern struct Game {
+    uint startTime;
+    uint finishTime;
+    uint points;
+    uint pointsToMake;
+    uint record;
+    ushort updateStep;
+    ushort movementSteps;
+    ushort windowHeight;
+    ushort windowWidth;
+    float updateRate;
+    float objectSize;
+    bool isGameplayInterrupted;
+} game;
+
+extern struct Player {
     Entity* entity;
     struct Hitbox hitbox;
     std::vector<GLfloat> spriteLocations;
     std::vector<glm::mat4> positionTargetsMat4;
     std::vector<glm::mat4> matrices;
-    glm::vec4 orientation = glm::vec4(0,0,1, 0);
-    glm::vec3 direction = glm::vec3(0, 0, 0);
-    glm::vec3 newDirection = glm::vec3(0,0,0);
+    glm::vec4 orientation;
+    glm::vec3 direction;
+    glm::vec3 newDirection;
 } player;
 
-struct Fruit {
+extern struct Fruit {
     Entity* entity;
     struct Hitbox hitbox;
-    uchar enabledSprite = 1;
-    std::vector<GLfloat> sprite1 = {
-        spriteMap["fruit"].x,       spriteMap["fruit"].y+0.25f,
-        spriteMap["fruit"].x+0.25f, spriteMap["fruit"].y+0.25f,
-        spriteMap["fruit"].x,       spriteMap["fruit"].y,
-        spriteMap["fruit"].x+0.25f, spriteMap["fruit"].y,
-    };
-    std::vector<GLfloat> sprite2 = {
-        spriteMap["fruitShine"].x,       spriteMap["fruitShine"].y+0.25f,
-        spriteMap["fruitShine"].x+0.25f, spriteMap["fruitShine"].y+0.25f,
-        spriteMap["fruitShine"].x,       spriteMap["fruitShine"].y,
-        spriteMap["fruitShine"].x+0.25f, spriteMap["fruitShine"].y,
-    };
+    uchar enabledSprite;
+    std::vector<GLfloat> sprite1;
+    std::vector<GLfloat> sprite2;
 } fruit;
 
-struct Barrier {
+extern struct Barrier {
     Entity* north;
     Entity* northEast;
     Entity* east;
@@ -98,13 +74,15 @@ struct Barrier {
     Entity* northWest;
 } barrier;
 
-struct Direction {
-    glm::vec3 left = glm::vec3(-updateRate, 0, 0);
-    glm::vec3 right = glm::vec3(+updateRate, 0, 0);
-    glm::vec3 up = glm::vec3(0, updateRate, 0);
-    glm::vec3 down = glm::vec3(0, -updateRate, 0);
+extern struct Direction {
+    glm::vec3 left;
+    glm::vec3 right;
+    glm::vec3 up;
+    glm::vec3 down;
 } direction;
 
+
+void processProgramArguments(int argc, const char * argv[]);
 void initializeSystem();
 void titleScreenLoop();
 void prepareGameStart();
@@ -122,6 +100,25 @@ void gameOverLoop();
 float randBetween(float min, float max);
 
 void onKeyDown(int key);
+void onMouseDown(int button, int x, int y);
+void onTouchDown(float x, float y, uint fingerId);
+void onTouchMove(float x, float y, float dx, float dy, uint fingerId);
+void onTouchUp(float x, float y, uint fingerId);
 void onWindowResize(int newWidth, int newHeight);
+
+void arrowUp();
+void arrowDown();
+void arrowLeft();
+void arrowRight();
+
+#ifdef __EMSCRIPTEN__
+    using namespace emscripten;
+    EMSCRIPTEN_BINDINGS(module) {
+        emscripten::function("arrowUp", &arrowUp, allow_raw_pointers());
+        emscripten::function("arrowDown", &arrowDown, allow_raw_pointers());
+        emscripten::function("arrowLeft", &arrowLeft, allow_raw_pointers());
+        emscripten::function("arrowRight", &arrowRight, allow_raw_pointers());
+    }
+#endif
 
 #endif /* snakeGame_h */

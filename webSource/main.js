@@ -28,7 +28,7 @@ function mixColor(base, topColor, weight) {
 var Module = {
     arguments: [
         `-ww${window.innerWidth}`,
-        `-wh${window.innerHeight}`,
+        `-wh${window.innerWidth}`,
     ],
     print: (function() {
         var element = document.getElementById('output');
@@ -47,5 +47,3 @@ var Module = {
         return canvas;
     })()
 };
-                       
-updateInterfaceColor(calcInterfaceColorFactor(720));

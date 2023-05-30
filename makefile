@@ -15,7 +15,7 @@ all:
 	
 	emcc -O3\
 		-lembind\
-		sources/main.cpp\
+		sources/main.cpp sources/InputHandlers.cpp\
 		$(game_lib_name) -o $(project_name).js\
 		-I$(library_include_path)\
 		-s USE_WEBGL2=1\

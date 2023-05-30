@@ -7,29 +7,85 @@
 
 #include "snakeGame.h"
 
+Camera* camera;
+Projection* projection;
+Entity* background;
+Text* gameInterface;
+Text* centerText;
+Text* creditsText;
+
+struct Game game;
+struct Player player;
+struct Barrier barrier;
+struct Fruit fruit;
+struct Direction direction;
+
+std::map<std::string, glm::vec2> spriteMap {
+    {"background", glm::vec2(0.00f, 0.25f)},
+    {"wallCorner", glm::vec2(0.00f, 0.50f)},
+    {"wall",       glm::vec2(0.25f, 0.50f)},
+    {"fruit",      glm::vec2(0.00f, 0.75f)},
+    {"fruitShine", glm::vec2(0.25f, 0.75f)},
+    {"snakeBody",  glm::vec2(0.50f, 0.25f)},
+    {"snakeHead",  glm::vec2(0.50f, 0.50f)},
+    {"snakeTongue",glm::vec2(0.75f, 0.50f)},
+    {"snakeDead",  glm::vec2(0.75f, 0.75f)},
+    {"snakeTail",  glm::vec2(0.75f, 0.00f)},
+    {"snakeFruit", glm::vec2(0.75f, 0.25f)},
+};
+
 int main(int argc, const char * argv[]) {
     Loader::File::setExecutableSystemPath( (char*)argv[0] );
+    
+    game.startTime = 0;
+    game.finishTime = 0;
+    
+    game.updateStep = 0;
+    game.movementSteps = 12;
+    game.updateRate = 1.0f/game.movementSteps;
+    game.objectSize = 1;
+    
+    game.points = 0;
+    game.pointsToMake = 0;
+    game.record = 0;
+    
+    game.isGameplayInterrupted = true;
+    game.windowWidth = 600;
+    game.windowHeight = 630;
+    
+    direction.left = glm::vec3(-game.updateRate, 0, 0);
+    direction.right = glm::vec3(+game.updateRate, 0, 0);
+    direction.up = glm::vec3(0, game.updateRate, 0);
+    direction.down = glm::vec3(0, -game.updateRate, 0);
+    
+    processProgramArguments(argc, argv);
+    initializeSystem();
+}
+
+void processProgramArguments(int argc, const char * argv[]) {
     for (int c=0; c<argc; c++) {
-        
         if (strstr(argv[c], ARG_WINDOW_WIDTH)) {
-            windowWidth = atoi(argv[c] + strlen(ARG_WINDOW_WIDTH));
+            game.windowWidth = atoi(argv[c] + strlen(ARG_WINDOW_WIDTH));
         }
         if (strstr(argv[c], ARG_WINDOW_HEIGHT)) {
-            windowHeight = atoi(argv[c] + strlen(ARG_WINDOW_HEIGHT));
+            game.windowHeight = atoi(argv[c] + strlen(ARG_WINDOW_HEIGHT));
         }
     }
-    initializeSystem();
 }
 
 void initializeSystem() {
     srand((uint)time(NULL));
     
     Core::Window::enableWindowResizable();
-    Core::Window::initialize(windowWidth, windowHeight, (char*)"snakeGame");
+    Core::Window::initialize(game.windowWidth, game.windowHeight, (char*)"snakeGame");
     Core::Renderer::initialize(Core::Window::getRenderContext());
     Core::Renderer::enableTransparency();
     
     Input::setKeyDownCallbackFunction(onKeyDown);
+    Input::setMouseDownCallbackFunction(onMouseDown);
+    Input::setTouchscreenDownCallbackFunction(onTouchDown);
+    Input::setTouchscreenMoveCallbackFunction(onTouchMove);
+    Input::setTouchscreenUpCallbackFunction(onTouchUp);
     Input::setWindowEventResizeCallbackFunction(onWindowResize);
     
     Loader::Texture::setFilteringMode(GL_NEAREST);
@@ -42,7 +98,7 @@ void initializeSystem() {
     player.entity->relatedTexturesId[0] = gameTexturesId;
     player.hitbox = Hitbox{player.entity->getPosition().x, player.entity->getPosition().y};
     Mesh* playerModel = new Mesh;
-    Creator::Quad::make(playerModel, objectSize, objectSize);
+    Creator::Quad::make(playerModel, game.objectSize, game.objectSize);
     Creator::Quad::addTexCoords(playerModel, 0.0f, 0.0f, TEX_PIXEL_POINT*8, TEX_PIXEL_POINT*8);
     playerModel->map["bodyInstance"] = ModelSubdata{};
     playerModel->map["bodyInstance"].attribDivisor = 1;
@@ -80,12 +136,24 @@ void initializeSystem() {
     background->relatedShaderId = programForOneDraw;
     Mesh* bkgModel = new Mesh;
     float backgroundSize = 25;
-    Creator::Grid::addVertices2d(bkgModel, backgroundSize, backgroundSize);
+    Creator::Grid::addVertices2d(bkgModel, backgroundSize, backgroundSize+2);
     Creator::Grid::addTexCoords(bkgModel, spriteMap["background"].x, spriteMap["background"].y, 0.25f, 0.25f);
-    Creator::Grid::addCounterClockwiseIndices(bkgModel, backgroundSize, backgroundSize);
+    Creator::Grid::addCounterClockwiseIndices(bkgModel, backgroundSize, backgroundSize+2);
     background->buffer = Loader::Model::fromMesh(bkgModel, background->relatedShaderId);
     
     fruit.entity = new Entity();
+    fruit.sprite1 = {
+        spriteMap["fruit"].x,       spriteMap["fruit"].y+0.25f,
+        spriteMap["fruit"].x+0.25f, spriteMap["fruit"].y+0.25f,
+        spriteMap["fruit"].x,       spriteMap["fruit"].y,
+        spriteMap["fruit"].x+0.25f, spriteMap["fruit"].y,
+    };
+    fruit.sprite2 = {
+        spriteMap["fruitShine"].x,       spriteMap["fruitShine"].y+0.25f,
+        spriteMap["fruitShine"].x+0.25f, spriteMap["fruitShine"].y+0.25f,
+        spriteMap["fruitShine"].x,       spriteMap["fruitShine"].y,
+        spriteMap["fruitShine"].x+0.25f, spriteMap["fruitShine"].y,
+    };
     fruit.entity->relatedTexturesId[0] = gameTexturesId;
     fruit.entity->relatedShaderId = programForOneDraw;
     Mesh* fruitModel = new Mesh;
@@ -141,7 +209,7 @@ void initializeSystem() {
     
     projection = new Projection();
     projection->setPerspecProjection(90, Core::Window::getAspectRatio(), 0.1f, 100.0f);
-    projection->setOrthographic(0, windowWidth, windowHeight, 0);
+    projection->setOrthographic(0, game.windowWidth, game.windowHeight, 0);
     
     Core::Window::setLoopCallback(titleScreenLoop);
     Core::Renderer::enableFaceCulling();
@@ -188,7 +256,7 @@ void prepareGameStart() {
     player.positionTargetsMat4.push_back(glm::translate(glm::vec3(11.0f, 11.0f, 0)));
     player.positionTargetsMat4.push_back(glm::translate(glm::vec3(11.0f, 12.0f, 0)));
     player.entity->isEnabled = true;
-    player.newDirection = glm::vec3(0, -updateRate, 0);
+    player.newDirection = glm::vec3(0, -game.updateRate, 0);
     player.orientation = glm::vec4(0,0,1, 0);
     player.direction = player.newDirection;
     
@@ -197,11 +265,11 @@ void prepareGameStart() {
     
     centerText->setPosition(glm::vec3(5.10, 11, 0));
     
-    points = 0;
-    updateStep = 0;
-    isGameplayInterrupted = false;
-    finishTime = 0;
-    startTime = Core::Window::getTimeElapsed();
+    game.points = 0;
+    game.updateStep = 0;
+    game.isGameplayInterrupted = false;
+    game.finishTime = 0;
+    game.startTime = Core::Window::getTimeElapsed();
     
     Core::Window::setLoopCallback(startGameLoop);
 }
@@ -222,9 +290,9 @@ void startGameLoop() {
     Core::Shader::setUniformModelViewProjection(centerText, camera->getMatrix(), projection->getPerspective());
     Core::Renderer::drawElementsInstanced(centerText, centerText->getStringSize());
     
-    if (Core::Window::getTimeElapsed() - startTime > 2000) {
+    if (Core::Window::getTimeElapsed() - game.startTime > 2000) {
         Core::Window::setLoopCallback(mainLoop);
-        startTime = Core::Window::getTimeElapsed();
+        game.startTime = Core::Window::getTimeElapsed();
     }
 }
  
@@ -234,10 +302,10 @@ void mainLoop() {
 }
 
 void runGameLogic() {
-    updateStep++;
+    game.updateStep++;
     
     // Snake in action
-    if (updateStep <= movementSteps) {
+    if (game.updateStep <= game.movementSteps) {
         for (int c=1; c<player.matrices.size(); c++) {
             if (player.positionTargetsMat4[c] == player.positionTargetsMat4[c-1]) {
                 if (c < player.matrices.size()-1) {
@@ -246,7 +314,7 @@ void runGameLogic() {
                 }
                 continue;
             }
-            float weight = updateRate*updateStep;
+            float weight = game.updateRate*game.updateStep;
             glm::vec3 nextPositionStep = Util::Math::mix(player.positionTargetsMat4[c][3],
                                                          player.positionTargetsMat4[c-1][3],
                                                          weight);
@@ -271,16 +339,16 @@ void runGameLogic() {
     }
     
     // Snake "Sleep Mode"
-    else if (updateStep > movementSteps*2) {
-        updateStep = 0;
-        points += pointsToMake;
+    else if (game.updateStep > game.movementSteps*2) {
+        game.updateStep = 0;
+        game.points += game.pointsToMake;
         player.direction = player.newDirection;
         
         for (int c=0; c<player.matrices.size(); c++) {
             player.positionTargetsMat4[c] = player.matrices[c];
         }
         
-        if (pointsToMake == 1) {
+        if (game.pointsToMake == 1) {
             glm::mat4 newSegment = player.matrices.front();
             player.matrices.insert(player.matrices.begin(), {newSegment});
             Loader::Model::updateBufferSubDataMatrix(player.entity->buffer, "bodyInstance", player.matrices);
@@ -290,7 +358,7 @@ void runGameLogic() {
             player.spriteLocations.push_back(spriteMap["snakeTail"].x);
             player.spriteLocations.push_back(spriteMap["snakeTail"].y);
         }
-        pointsToMake = 0;
+        game.pointsToMake = 0;
         
         float distance = sqrt(pow(fruit.hitbox.x-player.hitbox.x, 2) + pow(fruit.hitbox.y-player.hitbox.y, 2));
         if (distance <= 2) {
@@ -303,6 +371,7 @@ void runGameLogic() {
         
         if ((player.hitbox.x == fruit.hitbox.x) && (player.hitbox.y == fruit.hitbox.y)) {
             int e=0;
+            std::vector<glm::vec2> fillMap;
             fillMap.resize(400);
             for (int y=1; y<=20; y++) {
                 for (int x=1; x<=20; x++) {
@@ -324,7 +393,7 @@ void runGameLogic() {
                                                 0));
             fruit.hitbox.x = fruit.entity->getPosition().x;
             fruit.hitbox.y = fruit.entity->getPosition().y;
-            pointsToMake = 1;
+            game.pointsToMake = 1;
         }
         
         for (uint c=2; c<player.matrices.size(); c++) {
@@ -334,7 +403,7 @@ void runGameLogic() {
                 prepareForGameOver();
             }
         }
-        finishTime = (Core::Window::getTimeElapsed() - startTime)/1000;
+        game.finishTime = (Core::Window::getTimeElapsed() - game.startTime)/1000;
         
         if (fruit.enabledSprite == 1) {
             Loader::Model::updateBufferSubData(fruit.entity->buffer, "texCoords", fruit.sprite2);
@@ -398,7 +467,7 @@ void drawBarriers() {
 
 void drawGameInterface() {
     Core::Shader::setActiveProgram(gameInterface->relatedShaderId);
-    sprintf(gameInterface->content, " Points %03d ", points);
+    sprintf(gameInterface->content, " Points %03d ", game.points);
     gameInterface->processContents((uchar*) gameInterface->content);
     Loader::Model::updateBufferSubData(gameInterface->buffer, "charInfo", gameInterface->getStringInfo());
     Core::Shader::setUniformTexture(gameInterface->relatedTexturesId[0], gameInterface->textureType, 0);
@@ -406,7 +475,7 @@ void drawGameInterface() {
     Core::Shader::setUniformModelViewProjection(gameInterface, camera->getMatrix(), projection->getPerspective());
     Core::Renderer::drawElementsInstanced(gameInterface, gameInterface->getStringSize());
     
-    sprintf(gameInterface->content, " Time Elapsed %04d ", finishTime);
+    sprintf(gameInterface->content, " Time Elapsed %04d ", game.finishTime);
     gameInterface->processContents((uchar*) gameInterface->content);
     Loader::Model::updateBufferSubData(gameInterface->buffer, "charInfo", gameInterface->getStringInfo());
     gameInterface->setPosition(glm::vec3(13.10, 21.90, 0));
@@ -420,10 +489,10 @@ void prepareForGameOver() {
     player.newDirection = glm::vec4(0,0,1, 0);
     player.direction = player.newDirection;
     player.entity->isEnabled = false;
-    isGameplayInterrupted = true;
-    finishTime = (Core::Window::getTimeElapsed() - startTime)/1000;
-    if (points > record) {
-        record = points;
+    game.isGameplayInterrupted = true;
+    game.finishTime = (Core::Window::getTimeElapsed() - game.startTime)/1000;
+    if (game.points > game.record) {
+        game.record = game.points;
     }
     centerText->setPosition(glm::vec3(5.10, 12.5, 0));
     Core::Window::setLoopCallback(gameOverLoop);
@@ -439,7 +508,7 @@ void gameOverLoop() {
             "                        \n"
             " Tap or press to restart\n"
             "                        \n",
-            record
+            game.record
     );
     centerText->processContents((uchar*) centerText->content);
     Loader::Model::updateBufferSubData(centerText->buffer, "charInfo", centerText->getStringInfo());
@@ -448,44 +517,27 @@ void gameOverLoop() {
     Core::Renderer::drawElementsInstanced(centerText, centerText->getStringSize());
 }
 
-void onKeyDown(int key) {
-    if (player.entity->isEnabled) {
-        switch (key) {
-            case IC_INPUT_ARROW_RIGHT:
-                if (player.direction != direction.left) {
-                    player.newDirection = direction.right;
-                    player.orientation = glm::vec4(0,0,1, 90);
-                }
-                break;
-            case IC_INPUT_ARROW_LEFT:
-                if (player.direction != direction.right) {
-                    player.newDirection = glm::vec3(-updateRate, 0, 0);
-                    player.orientation = glm::vec4(0,0,1, -90);
-                }
-                break;
-            case IC_INPUT_ARROW_DOWN:
-                if (player.direction != direction.up) {
-                    player.newDirection = direction.down;
-                    player.orientation = glm::vec4(0,0,1, 360);
-                }
-                break;
-            case IC_INPUT_ARROW_UP:
-                if (player.direction != direction.down) {
-                    player.newDirection = direction.up;
-                    player.orientation = glm::vec4(0,0,1, 180);
-                }
-                break;
-            default:
-                break;
-        }
-    }
-    if (isGameplayInterrupted) {
-        prepareGameStart();
+void arrowUp() {
+    if (player.direction != direction.down) {
+        player.newDirection = direction.up;
+        player.orientation = glm::vec4(0,0,1, 180);
     }
 }
-
-void onWindowResize(int newWidth, int newHeight) {
-    glViewport(0, 0, newWidth, newHeight);
-    projection->setPerspecProjection(90, (float) Core::Window::getAspectRatio(), 0.1f, 100.0f);
-    projection->setOrthographic(0.0f, (float)newWidth, (float)newHeight, 0.0f);
+void arrowDown() {
+    if (player.direction != direction.up) {
+        player.newDirection = direction.down;
+        player.orientation = glm::vec4(0,0,1, 360);
+    }
+}
+void arrowLeft() {
+    if (player.direction != direction.right) {
+        player.newDirection = glm::vec3(-game.updateRate, 0, 0);
+        player.orientation = glm::vec4(0,0,1, -90);
+    }
+}
+void arrowRight() {
+    if (player.direction != direction.left) {
+        player.newDirection = direction.right;
+        player.orientation = glm::vec4(0,0,1, 90);
+    }
 }
