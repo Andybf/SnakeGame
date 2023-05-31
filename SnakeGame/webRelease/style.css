@@ -1,0 +1,75 @@
+/*
+ * Terrain Generator
+ * 2023 - Anderson Bucchianico
+ *
+*/
+
+:root {
+    --font-size: 10px;
+    --border-radius: 2px;
+}
+
+* {
+    color: var(--font-color);
+    font-family: OpenSans, Arial, Helvetica, sans-serif;
+}
+
+@media(prefers-color-scheme: dark) {
+    .dynamic-theme {
+        --background-color: black;
+        --background-transparent: #000000c0;
+        --button-color: #222222;
+        --font-color: white;
+    }
+}
+
+@media(prefers-color-scheme: light) {
+    .dynamic-theme {
+        --background-color: white;
+        --background-transparent: #FFFFFFc0;
+        --button-color: #dddddd;
+        --font-color: black;
+    }
+}
+
+html {
+    height : 100%;
+}
+body {
+    height: inherit;
+    margin: 0;
+    background-color: var(--background-color);
+    display: flex;
+    align-items: center;
+    column-gap: 0.5rem;
+}
+canvas#canvas {
+    width: 100%;
+    height: 100%;
+}
+
+div#console-container {
+    background-color: var(--background-transparent);
+    border-radius: var(--box-radius);
+    position: absolute;
+    bottom: 1vh;
+    width: 100%;
+    flex-direction: column;
+    height: fit-content;
+    display: none;
+}
+p#output {
+    color: var(--font-color);
+    font-size: var(--font-size);
+    font-family: monospace;
+    padding: 1vh;
+    height: 192px;
+    overflow: auto;
+    margin: 0;
+}
+button.console-button {
+    background: var(--button-color);
+    border: var(--button-border);
+    border-radius: var(--box-radius);
+    padding: 0.5rem;
+}
