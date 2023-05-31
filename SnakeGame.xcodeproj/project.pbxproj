@@ -1,0 +1,478 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 53;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		713C188E2A259E730069F2F7 /* InputHandlers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 713C188D2A259E730069F2F7 /* InputHandlers.cpp */; };
+		7168810B29F9547B00AD1DF7 /* fontmap.png in CopyFiles */ = {isa = PBXBuildFile; fileRef = 7168810729F9545D00AD1DF7 /* fontmap.png */; };
+		7168810C29F9547E00AD1DF7 /* text.fs in CopyFiles */ = {isa = PBXBuildFile; fileRef = 7168810A29F9546A00AD1DF7 /* text.fs */; };
+		7168810D29F9548200AD1DF7 /* text.vs in CopyFiles */ = {isa = PBXBuildFile; fileRef = 7168810929F9546A00AD1DF7 /* text.vs */; };
+		71751D4A29F45E0800F4AAB5 /* snake-game-sprites.png in CopyFiles */ = {isa = PBXBuildFile; fileRef = 71955D8629F38A7E006800C5 /* snake-game-sprites.png */; };
+		71A2A8D32A0362D200E10918 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 71A7D07329F0235000F91187 /* main.cpp */; };
+		71A2A8D72A03635600E10918 /* gameObjectInstanced.vs in CopyFiles */ = {isa = PBXBuildFile; fileRef = 712CC66529F6CCAE00A04709 /* gameObjectInstanced.vs */; };
+		71A2A8D82A03635600E10918 /* gameObjectInstanced.fs in CopyFiles */ = {isa = PBXBuildFile; fileRef = 712CC66329F6CCAE00A04709 /* gameObjectInstanced.fs */; };
+		71A2A8DA2A03636A00E10918 /* gameObject.vs in CopyFiles */ = {isa = PBXBuildFile; fileRef = 71751D4429F453E500F4AAB5 /* gameObject.vs */; };
+		71A2A8DB2A03636A00E10918 /* gameObject.fs in CopyFiles */ = {isa = PBXBuildFile; fileRef = 71751D4529F4562C00F4AAB5 /* gameObject.fs */; };
+		71A7D09629F0250F00F91187 /* libIcosphereGameLibrary.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 71A7D09329F023C000F91187 /* libIcosphereGameLibrary.a */; };
+		71A7D09829F0252000F91187 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 71A7D09729F0252000F91187 /* OpenGL.framework */; };
+		71B335612A0A716600CCBEF0 /* makefile in Sources */ = {isa = PBXBuildFile; fileRef = 71B3355F2A0A716600CCBEF0 /* makefile */; };
+		71C821AD2A03556600ADB10A /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 71C821AC2A03556600ADB10A /* SDL2.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		71A7D09229F023C000F91187 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 71A7D08E29F023C000F91187 /* IcosphereGameLibrary.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 71855A852999460E00253F55;
+			remoteInfo = IcosphereGameLibrary;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		71751D4629F45AE800F4AAB5 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = ./shaders;
+			dstSubfolderSpec = 7;
+			files = (
+				71A2A8DA2A03636A00E10918 /* gameObject.vs in CopyFiles */,
+				71A2A8DB2A03636A00E10918 /* gameObject.fs in CopyFiles */,
+				71A2A8D72A03635600E10918 /* gameObjectInstanced.vs in CopyFiles */,
+				71A2A8D82A03635600E10918 /* gameObjectInstanced.fs in CopyFiles */,
+				7168810C29F9547E00AD1DF7 /* text.fs in CopyFiles */,
+				7168810D29F9548200AD1DF7 /* text.vs in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		71751D4929F45DFD00F4AAB5 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = ./textures;
+			dstSubfolderSpec = 7;
+			files = (
+				71751D4A29F45E0800F4AAB5 /* snake-game-sprites.png in CopyFiles */,
+				7168810B29F9547B00AD1DF7 /* fontmap.png in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		712CC66329F6CCAE00A04709 /* gameObjectInstanced.fs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = gameObjectInstanced.fs; sourceTree = "<group>"; };
+		712CC66529F6CCAE00A04709 /* gameObjectInstanced.vs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = gameObjectInstanced.vs; sourceTree = "<group>"; };
+		713C188D2A259E730069F2F7 /* InputHandlers.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = InputHandlers.cpp; sourceTree = "<group>"; };
+		7168810729F9545D00AD1DF7 /* fontmap.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = fontmap.png; sourceTree = "<group>"; };
+		7168810929F9546A00AD1DF7 /* text.vs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = text.vs; sourceTree = "<group>"; };
+		7168810A29F9546A00AD1DF7 /* text.fs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = text.fs; sourceTree = "<group>"; };
+		71751D4429F453E500F4AAB5 /* gameObject.vs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = gameObject.vs; sourceTree = "<group>"; };
+		71751D4529F4562C00F4AAB5 /* gameObject.fs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = gameObject.fs; sourceTree = "<group>"; };
+		71751D8829F47D0300F4AAB5 /* snakeGame.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = snakeGame.h; sourceTree = "<group>"; };
+		71955D5C29F36C2E006800C5 /* libSDL2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libSDL2.a; path = ../../../../usr/local/Cellar/sdl2/2.26.4/lib/libSDL2.a; sourceTree = "<group>"; };
+		71955D7829F36F55006800C5 /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = ../../../../Volumes/SDL2/SDL2.framework; sourceTree = "<group>"; };
+		71955D8629F38A7E006800C5 /* snake-game-sprites.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "snake-game-sprites.png"; sourceTree = "<group>"; };
+		71A7D07029F0235000F91187 /* SnakeGame */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = SnakeGame; sourceTree = BUILT_PRODUCTS_DIR; };
+		71A7D07329F0235000F91187 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		71A7D08E29F023C000F91187 /* IcosphereGameLibrary.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = IcosphereGameLibrary.xcodeproj; path = ../IcosphereGameLibrary/IcosphereGameLibrary.xcodeproj; sourceTree = "<group>"; };
+		71A7D09729F0252000F91187 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
+		71A7D09929F0253900F91187 /* libSDL2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libSDL2.a; path = ../../../../opt/homebrew/Cellar/sdl2/2.26.2/lib/libSDL2.a; sourceTree = "<group>"; };
+		71A7D09B29F0261200F91187 /* SDL2 */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = SDL2; path = ../../../../Library/Frameworks/SDL2.framework/Versions/A/SDL2; sourceTree = "<group>"; };
+		71A7D0A029F0264B00F91187 /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = ../../../../Library/Frameworks/SDL2.framework; sourceTree = "<group>"; };
+		71B3355F2A0A716600CCBEF0 /* makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = makefile; sourceTree = "<group>"; };
+		71C821AC2A03556600ADB10A /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = ../../../../../Library/Frameworks/SDL2.framework; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		71A7D06D29F0235000F91187 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				71C821AD2A03556600ADB10A /* SDL2.framework in Frameworks */,
+				71A7D09629F0250F00F91187 /* libIcosphereGameLibrary.a in Frameworks */,
+				71A7D09829F0252000F91187 /* OpenGL.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		71751D4229F44CF000F4AAB5 /* shaders */ = {
+			isa = PBXGroup;
+			children = (
+				71751D4429F453E500F4AAB5 /* gameObject.vs */,
+				71751D4529F4562C00F4AAB5 /* gameObject.fs */,
+				712CC66529F6CCAE00A04709 /* gameObjectInstanced.vs */,
+				712CC66329F6CCAE00A04709 /* gameObjectInstanced.fs */,
+				7168810A29F9546A00AD1DF7 /* text.fs */,
+				7168810929F9546A00AD1DF7 /* text.vs */,
+			);
+			path = shaders;
+			sourceTree = "<group>";
+		};
+		71955D8429F38A57006800C5 /* textures */ = {
+			isa = PBXGroup;
+			children = (
+				7168810729F9545D00AD1DF7 /* fontmap.png */,
+				71955D8629F38A7E006800C5 /* snake-game-sprites.png */,
+			);
+			path = textures;
+			sourceTree = "<group>";
+		};
+		71955D8529F38A5F006800C5 /* sources */ = {
+			isa = PBXGroup;
+			children = (
+				71751D8829F47D0300F4AAB5 /* snakeGame.h */,
+				71A7D07329F0235000F91187 /* main.cpp */,
+				713C188D2A259E730069F2F7 /* InputHandlers.cpp */,
+			);
+			path = sources;
+			sourceTree = "<group>";
+		};
+		71A7D06729F0235000F91187 = {
+			isa = PBXGroup;
+			children = (
+				71A7D07229F0235000F91187 /* SnakeGame */,
+				71A7D08E29F023C000F91187 /* IcosphereGameLibrary.xcodeproj */,
+				71A7D07129F0235000F91187 /* Products */,
+				71A7D09529F0250F00F91187 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		71A7D07129F0235000F91187 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				71A7D07029F0235000F91187 /* SnakeGame */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		71A7D07229F0235000F91187 /* SnakeGame */ = {
+			isa = PBXGroup;
+			children = (
+				71955D8529F38A5F006800C5 /* sources */,
+				71751D4229F44CF000F4AAB5 /* shaders */,
+				71955D8429F38A57006800C5 /* textures */,
+				71B3355F2A0A716600CCBEF0 /* makefile */,
+			);
+			path = SnakeGame;
+			sourceTree = "<group>";
+		};
+		71A7D08F29F023C000F91187 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				71A7D09329F023C000F91187 /* libIcosphereGameLibrary.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		71A7D09529F0250F00F91187 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				71955D7829F36F55006800C5 /* SDL2.framework */,
+				71C821AC2A03556600ADB10A /* SDL2.framework */,
+				71955D5C29F36C2E006800C5 /* libSDL2.a */,
+				71A7D0A029F0264B00F91187 /* SDL2.framework */,
+				71A7D09B29F0261200F91187 /* SDL2 */,
+				71A7D09929F0253900F91187 /* libSDL2.a */,
+				71A7D09729F0252000F91187 /* OpenGL.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		71C821B82A035ADB00ADB10A /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		71A7D06F29F0235000F91187 /* SnakeGame */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 71A7D07729F0235000F91187 /* Build configuration list for PBXNativeTarget "SnakeGame" */;
+			buildPhases = (
+				71C821B82A035ADB00ADB10A /* Headers */,
+				7119E5F42A035D430076E7BC /* Sources */,
+				71A7D06D29F0235000F91187 /* Frameworks */,
+				71751D4629F45AE800F4AAB5 /* CopyFiles */,
+				71751D4929F45DFD00F4AAB5 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SnakeGame;
+			productName = SnakeGame;
+			productReference = 71A7D07029F0235000F91187 /* SnakeGame */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		71A7D06829F0235000F91187 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastUpgradeCheck = 1340;
+				TargetAttributes = {
+					71A7D06F29F0235000F91187 = {
+						CreatedOnToolsVersion = 13.4.1;
+					};
+				};
+			};
+			buildConfigurationList = 71A7D06B29F0235000F91187 /* Build configuration list for PBXProject "SnakeGame" */;
+			compatibilityVersion = "Xcode 11.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 71A7D06729F0235000F91187;
+			productRefGroup = 71A7D07129F0235000F91187 /* Products */;
+			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 71A7D08F29F023C000F91187 /* Products */;
+					ProjectRef = 71A7D08E29F023C000F91187 /* IcosphereGameLibrary.xcodeproj */;
+				},
+			);
+			projectRoot = "";
+			targets = (
+				71A7D06F29F0235000F91187 /* SnakeGame */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		71A7D09329F023C000F91187 /* libIcosphereGameLibrary.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libIcosphereGameLibrary.a;
+			remoteRef = 71A7D09229F023C000F91187 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
+
+/* Begin PBXSourcesBuildPhase section */
+		7119E5F42A035D430076E7BC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				71B335612A0A716600CCBEF0 /* makefile in Sources */,
+				713C188E2A259E730069F2F7 /* InputHandlers.cpp in Sources */,
+				71A2A8D32A0362D200E10918 /* main.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		71A7D07529F0235000F91187 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					/Users/anderson/Desktop/IcosphereGameLibrary/IcosphereGameLibrary/include,
+					/usr/local/Cellar/sdl2/2.26.4/include,
+				);
+				LIBRARY_SEARCH_PATHS = /usr/local/Cellar/sdl2/2.26.4/lib;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		71A7D07629F0235000F91187 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					/Users/anderson/Desktop/IcosphereGameLibrary/IcosphereGameLibrary/include,
+					/usr/local/Cellar/sdl2/2.26.4/include,
+				);
+				LIBRARY_SEARCH_PATHS = /usr/local/Cellar/sdl2/2.26.4/lib;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		71A7D07829F0235000F91187 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "";
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(LOCAL_LIBRARY_DIR)/Frameworks",
+				);
+				HEADER_SEARCH_PATHS = (
+					/Users/anderson/Desktop/IcosphereGameLibrary/IcosphereGameLibrary/dependencies/sdl/include,
+					/Users/anderson/Desktop/IcosphereGameLibrary/IcosphereGameLibrary/include,
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/Cellar/sdl2/2.26.4/lib,
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				PRODUCT_BUNDLE_IDENTIFIER = com.andybf.snakeGame;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+			};
+			name = Debug;
+		};
+		71A7D07929F0235000F91187 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "";
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(LOCAL_LIBRARY_DIR)/Frameworks",
+				);
+				HEADER_SEARCH_PATHS = (
+					/Users/anderson/Desktop/IcosphereGameLibrary/IcosphereGameLibrary/dependencies/sdl/include,
+					/Users/anderson/Desktop/IcosphereGameLibrary/IcosphereGameLibrary/include,
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/usr/local/Cellar/sdl2/2.26.4/lib,
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				PRODUCT_BUNDLE_IDENTIFIER = com.andybf.snakeGame;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		71A7D06B29F0235000F91187 /* Build configuration list for PBXProject "SnakeGame" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				71A7D07529F0235000F91187 /* Debug */,
+				71A7D07629F0235000F91187 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		71A7D07729F0235000F91187 /* Build configuration list for PBXNativeTarget "SnakeGame" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				71A7D07829F0235000F91187 /* Debug */,
+				71A7D07929F0235000F91187 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 71A7D06829F0235000F91187 /* Project object */;
+}
