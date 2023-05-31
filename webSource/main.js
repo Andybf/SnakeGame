@@ -12,38 +12,53 @@ function toggleInterfaceConsole() {
     consoleStyle.display = (consoleStyle.display == '') ? 'flex' : '';
 }
 
-function clearConsole(event) {
+function clearConsole() {
     let outputConsole = document.querySelector("p#output");
     outputConsole.innerHTML = "";
 }
 
-function mixColor(base, topColor, weight) {
-    return {
-         r: base.r * (1-weight) + topColor.r * weight,
-         g: base.g * (1-weight) + topColor.g * weight,
-         b: base.b * (1-weight) + topColor.b * weight
+async function initialize() {
+    Module = {
+        print: (function() {
+            var element = document.getElementById('output');
+            return function(text) {
+                element.innerHTML += text + "<br>";
+            };
+        })(),
+    
+        printErr: function(text) {
+            if (arguments.length > 1) {
+                text = Array.prototype.slice.call(arguments).join(' ');
+            }
+        },
+        
+        canvas: (function() {
+            var canvas = document.getElementById('canvas');
+            return canvas;
+        })()
     };
+
+    if (window.innerWidth < 480) {
+        Module.arguments = [
+            `-ww${window.innerWidth}`,
+            `-wh${window.innerHeight}`,
+            `-th26`,
+            `-tw12`,
+        ];
+    } else {
+        Module.arguments = [
+            `-ww${window.innerWidth}`,
+            `-wh${window.innerHeight}`,
+            `-th20`,
+            `-tw20`,
+        ];
+    }
+
+    let script = document.createElement("script");
+    script.src = "./index.js";
+    document.body.appendChild(script);
 }
 
-var Module = {
-    arguments: [
-        `-ww${window.innerWidth}`,
-        `-wh${window.innerWidth}`,
-    ],
-    print: (function() {
-        var element = document.getElementById('output');
-        return function(text) {
-            element.innerHTML += text + "<br>";
-        };
-    })(),
-    printErr: function(text) {
-            if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
-            if (0) {
-                dump(text + '\n');
-            }
-    },
-    canvas: (function() {
-        var canvas = document.getElementById('canvas');
-        return canvas;
-    })()
-};
+
+initialize();
+

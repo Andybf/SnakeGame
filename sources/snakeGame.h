@@ -12,6 +12,8 @@
 
 #define ARG_WINDOW_WIDTH  "-ww"
 #define ARG_WINDOW_HEIGHT "-wh"
+#define ARG_TILEMAP_WIDTH "-tw"
+#define ARG_TILEMAP_HEIGHT "-th"
 
 #define TEX_PIXEL_POINT 0.03125 // 1px / 32px
 
@@ -39,6 +41,8 @@ extern struct Game {
     ushort movementSteps;
     ushort windowHeight;
     ushort windowWidth;
+    uchar tilemapWidth;
+    uchar tilemapHeight;
     float updateRate;
     float objectSize;
     bool isGameplayInterrupted;
